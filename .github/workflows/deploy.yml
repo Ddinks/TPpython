@@ -1,0 +1,45 @@
+name: Deploy My Custom App
+
+on:
+  push:
+    branches:
+      - main  # Déclenche le workflow lorsque vous poussez sur la branche "main"
+
+jobs:
+  deploy-my-custom-app:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. Check out your code from GitHub
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # 2. Build and run tests
+    - name: Build and run tests
+      run: |
+        # Ajoutez ici les commandes pour construire et tester votre application
+        # Exemple pour une application Node.js :
+        # npm install
+        # npm run build
+        # npm test
+
+    # 3. Deploy to the server
+    - name: Deploy to custom server
+      env:
+        SERVER_IP: ${{ secrets.SERVER_IP }}
+        SSH_USER: ${{ secrets.SSH_USER }}
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      run: |
+        # Ajouter la clé privée SSH pour l'authentification
+        echo "${SSH_PRIVATE_KEY}" > ssh_key
+        chmod 600 ssh_key
+
+        # Utiliser SSH pour déployer votre application
+        ssh -i ssh_key -o StrictHostKeyChecking=no ${SSH_USER}@${SERVER_IP} << 'EOF'
+          # Commandes exécutées sur votre serveur
+          cd /path/to/your/app
+          git pull origin main  # Met à jour le code sur le serveur
+          docker-compose down   # Arrêter l'application si vous utilisez Docker
+          docker-compose up -d  # Re-démarrer l'application
+        EOF
+        rm ssh_key  # Supprimer la clé SSH après utilisation
